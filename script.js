@@ -1,22 +1,50 @@
 ﻿// ==========================================
 //    De Pelikaan - Main Script
 // ==========================================
+// Now Supports Supabase!
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 1. DATA LOADING ---
     let currentEvent = defaultEvent;
     let menuItems = defaultMenuItems;
 
-    // Check localStorage (The "Database")
-    const lsEvent = localStorage.getItem('siteEvent');
-    if (lsEvent) {
-        currentEvent = JSON.parse(lsEvent);
-    }
+    // A. Probeer Supabase
+    if (typeof supabase !== 'undefined' && supabase) {
+        try {
+            // Fetch Event
+            const { data: eventData, error: eventError } = await supabase
+                .from('events')
+                .select('*')
+                .single(); // We assume only 1 row or take the first
+            
+            if (eventData && !eventError) {
+                currentEvent = eventData;
+                console.log('Loaded Event from Supabase');
+            }
 
-    const lsMenu = localStorage.getItem('siteMenu');
-    if (lsMenu) {
-        menuItems = JSON.parse(lsMenu);
+            // Fetch Menu
+            const { data: menuData, error: menuError } = await supabase
+                .from('menu_items')
+                .select('*');
+            
+            if (menuData && !menuError && menuData.length > 0) {
+                menuItems = menuData;
+                console.log('Loaded Menu from Supabase');
+            }
+        } catch (err) {
+            console.warn('Supabase fetch failed, falling back to local storage', err);
+        }
+    } 
+    
+    // B. Fallback naar LocalStorage (als Supabase leeg/stuk is of nog niet geconfigureerd)
+    if (!supabase || currentEvent === defaultEvent) { 
+        const lsEvent = localStorage.getItem('siteEvent');
+        if (lsEvent) currentEvent = JSON.parse(lsEvent);
+    }
+    if (!supabase || menuItems === defaultMenuItems) {
+        const lsMenu = localStorage.getItem('siteMenu');
+        if (lsMenu) menuItems = JSON.parse(lsMenu);
     }
 
     // --- 2. PROMO BANNER ---
@@ -73,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             menuGrid.appendChild(card);
         });
 
+        // Add keyframe animation dynamically if not in CSS
         if (!document.getElementById('dynamic-styles')) {
             const style = document.createElement('style');
             style.id = 'dynamic-styles';
@@ -95,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Initial Render
     renderMenu('all');
 
     // Smooth Scroll

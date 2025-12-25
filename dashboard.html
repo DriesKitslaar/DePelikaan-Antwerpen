@@ -50,7 +50,6 @@
         .btn-delete { background: #500; }
         .btn-delete:hover { background: #700; }
         
-        /* Save Status */
         #save-status {
             position: fixed;
             bottom: 20px;
@@ -63,22 +62,35 @@
             display: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
+
+        .db-status {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #333;
+            color: #999;
+            margin-right: 10px;
+        }
+        .db-status.online { background: #1b4b1a; color: #4eff4a; }
+        .upload-btn { background: #333; color: white; border: 1px solid #555; margin-left:10px; }
     </style>
 </head>
 <body style="padding-top: 0;">
 
     <nav class="admin-nav">
         <div class="logo">De Pelikaan Admin</div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="saveAll()" class="btn-gold" style="padding: 10px 30px; font-size: 0.9rem; font-weight: bold;">OPSLAAN</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="db-indicator" class="db-status">DB Offline</span>
+            <button onclick="saveAll()" class="btn-gold" style="padding: 10px 30px; font-size: 0.9rem; font-weight: bold;">OPSLAAN NAAR CLOUD</button>
             <button onclick="logout()" class="btn-gold" style="padding: 10px 20px; font-size: 0.8rem; background: #333; color: white;">Uitloggen</button>
         </div>
     </nav>
 
     <div class="admin-content">
         <h1>Dashboard</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 30px;">
-            Pas hieronder alles aan en klik op <strong>OPSLAAN</strong>. De website wordt direct bijgewerkt (op dit apparaat).
+        <p style="color: var(--text-secondary); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between;">
+            <span>Beheer hier de website. Wijzigingen worden direct geüpload naar de database.</span>
+            <button onclick="uploadInitialData()" class="btn-small upload-btn" title="Gebruik dit 1x als de DB leeg is">Upload Huidige Data naar DB</button>
         </p>
 
         <div class="edit-section">
@@ -143,52 +155,70 @@
                     <option value="merch">T-Shirts</option>
                 </select>
             </div>
-            <button onclick="addMenuItem()" class="btn-gold" style="border:none; cursor:pointer; width: 100%;">Toevoegen</button>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px; color: #555; font-size: 0.8em;">
-            <p>Geavanceerd: Omdat dit geen server heeft, wordt alles opgeslagen in de browser (LocalStorage).</p>
+            <button onclick="addMenuItem()" class="btn-gold" style="border:none; cursor:pointer; width: 100%;">Toevoegen aan Lijst</button>
         </div>
     </div>
 
     <div id="save-status">Wijzigingen Opgeslagen!</div>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
     <script src="data.js"></script>
     <script>
         // State
         let currentMenuItems = [];
         let currentEventData = {};
+        let dbConnected = false;
 
         // Init
-        window.onload = function() {
-            // 1. Try Load from LocalStorage
-            const lsEvent = localStorage.getItem('siteEvent');
-            const lsMenu = localStorage.getItem('siteMenu');
-
-            if (lsEvent) {
-                currentEventData = JSON.parse(lsEvent);
-                console.log('Loaded Event from LS');
+        window.onload = async function() {
+            // Check connection
+            if (typeof supabase !== 'undefined' && supabase) {
+                dbConnected = true;
+                document.getElementById('db-indicator').innerText = "DB Online";
+                document.getElementById('db-indicator').classList.add('online');
+                
+                await loadFromDB();
             } else {
-                currentEventData = defaultEvent; // from data.js
+                console.warn('DB not connected, using LocalStorage fallback');
+                // Fallback Load
+                const lsEvent = localStorage.getItem('siteEvent');
+                const lsMenu = localStorage.getItem('siteMenu');
+                
+                currentEventData = lsEvent ? JSON.parse(lsEvent) : defaultEvent;
+                currentMenuItems = lsMenu ? JSON.parse(lsMenu) : defaultMenuItems;
+                
+                fillForms();
+                renderMenuTable();
+            }
+        };
+
+        async function loadFromDB() {
+            // 1. Load Event
+            const { data: eventData, error: eventError } = await supabase.from('events').select('*').single();
+            if (eventData) {
+                currentEventData = eventData;
+            } else {
+                currentEventData = defaultEvent; // Or empty
             }
 
-            if (lsMenu) {
-                currentMenuItems = JSON.parse(lsMenu);
-                console.log('Loaded Menu from LS');
+            // 2. Load Menu
+            const { data: menuData, error: menuError } = await supabase.from('menu_items').select('*').order('id', { ascending: true });
+            if (menuData) {
+                currentMenuItems = menuData;
             } else {
-                currentMenuItems = defaultMenuItems; // from data.js
+                currentMenuItems = defaultMenuItems;
             }
 
-            // 2. Fill Forms
             fillForms();
             renderMenuTable();
-        };
+        }
 
         function fillForms() {
             document.getElementById('banner-show').value = currentEventData.show.toString();
-            document.getElementById('banner-date').value = currentEventData.date;
-            document.getElementById('banner-title').value = currentEventData.title;
-            document.getElementById('banner-text').value = currentEventData.text;
+            document.getElementById('banner-date').value = currentEventData.date || "";
+            document.getElementById('banner-title').value = currentEventData.title || "";
+            document.getElementById('banner-text').value = currentEventData.text || "";
         }
 
         // Check Auth
@@ -212,20 +242,42 @@
                     <td>${item.name}</td>
                     <td>${item.price}</td>
                     <td>${item.category}</td>
-                    <td><button onclick="deleteItem(${index})" class="btn-small btn-delete">&times;</button></td>
+                    <td><button onclick="markedForDelete(${index})" class="btn-small btn-delete">&times;</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function deleteItem(index) {
-            if(confirm('Zeker weten?')) {
-                currentMenuItems.splice(index, 1);
-                renderMenuTable();
+        async function markedForDelete(index) {
+            if(!confirm('Item verwijderen? (Klik daarna op OPSLAAN om definitief te maken)')) return;
+            
+            // If connected, we might want to delete immediately or just remove from local array and let SaveAll handle it?
+            // "Save All" strategy is tricky with DB sync. Better to do "Interactive" or "Batch".
+            // Let's do: Local array modification, then SaveAll sends the whole state (or deletes/inserts).
+            // Actually, for a simple admin, sending the whole state replacement is heavy but easiest to code. 
+            // BUT: SQL DELETE/INSERT is cleaner.
+            
+            // Let's keep it simple: We modify the array. 
+            // If the item has an 'id' (from DB), we track it as deleted?
+            // Or easier: On SaveAll, we can truncate and re-insert (bad practice but easy) or just handle basic CRUD.
+            
+            // Better strategy for this simple app: DELETE immediately if it has an ID.
+            const item = currentMenuItems[index];
+            
+            if (dbConnected && item.id) {
+                const { error } = await supabase.from('menu_items').delete().eq('id', item.id);
+                if (error) {
+                    alert('Fout bij verwijderen: ' + error.message);
+                    return;
+                }
             }
+            
+            // Update UI
+            currentMenuItems.splice(index, 1);
+            renderMenuTable();
         }
 
-        function addMenuItem() {
+        async function addMenuItem() {
             const name = document.getElementById('new-item-name').value;
             const price = document.getElementById('new-item-price').value;
             const cat = document.getElementById('new-item-category').value;
@@ -235,12 +287,26 @@
                 return;
             }
 
-            currentMenuItems.push({
+            const newItem = {
                 name: name,
                 price: price,
                 category: cat,
-                desc: ""
-            });
+                description: ""
+            };
+
+            // If connected, insert immediately to get an ID back
+            if (dbConnected) {
+                const { data, error } = await supabase.from('menu_items').insert([newItem]).select();
+                if (error) {
+                    alert('Error saving: ' + error.message);
+                    return;
+                }
+                if (data) {
+                    currentMenuItems.push(data[0]); // Add with ID
+                }
+            } else {
+                currentMenuItems.push(newItem);
+            }
 
             document.getElementById('new-item-name').value = '';
             document.getElementById('new-item-price').value = '';
@@ -248,14 +314,34 @@
             renderMenuTable();
         }
 
-        function saveAll() {
-            // Update Event Object from Form
+        async function saveAll() {
+            // Update Event Object
             currentEventData.show = document.getElementById('banner-show').value === 'true';
             currentEventData.date = document.getElementById('banner-date').value;
             currentEventData.title = document.getElementById('banner-title').value;
             currentEventData.text = document.getElementById('banner-text').value;
 
-            // Save to LocalStorage
+            if (dbConnected) {
+                // 1. Update Event (Row 1 usually)
+                // We assume ID 1 exists from setup, or we fetch the ID we loaded.
+                if (currentEventData.id) {
+                    await supabase.from('events').update({
+                        show: currentEventData.show,
+                        date: currentEventData.date,
+                        title: currentEventData.title,
+                        text: currentEventData.text
+                    }).eq('id', currentEventData.id);
+                } else {
+                    // Try update any row, or insert
+                    await supabase.from('events').upsert([currentEventData]);
+                }
+
+                // Menu items are handled individually on Add/Delete in this new logic, 
+                // but we might've edited them? No edit feature yet, only add/delete.
+                // So no need to bulk save menu items.
+            }
+
+            // Always save to LocalStorage as backup
             localStorage.setItem('siteEvent', JSON.stringify(currentEventData));
             localStorage.setItem('siteMenu', JSON.stringify(currentMenuItems));
 
@@ -265,6 +351,37 @@
             setTimeout(() => {
                 status.style.display = 'none';
             }, 2000);
+        }
+
+        async function uploadInitialData() {
+            if (!dbConnected) {
+                alert('Geen verbinding met database. Vul supabase.js in.');
+                return;
+            }
+            
+            if (!confirm('Dit overschrijft/vult de database met de items uit data.js. Doorgaan?')) return;
+
+            // 1. Upload Event
+            await supabase.from('events').delete().neq('id', 0); // Clear old
+            await supabase.from('events').insert([defaultEvent]);
+
+            // 2. Upload Menu
+            // Remove 'desc' key map to 'description' if needed, or matched in SQL
+            // In SQL I called it 'description', in JS 'desc'. mapping needed.
+            const formattedItems = defaultMenuItems.map(item => ({
+                name: item.name,
+                price: item.price,
+                category: item.category,
+                description: item.desc || ""
+            }));
+
+            const { error } = await supabase.from('menu_items').insert(formattedItems);
+            
+            if (error) alert('Error: ' + error.message);
+            else {
+                alert('Upload succesvol! Herlaad de pagina.');
+                location.reload();
+            }
         }
     </script>
 </body>
