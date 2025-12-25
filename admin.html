@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Pelikaan | Admin Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        .login-card {
+            background: var(--bg-card);
+            padding: 60px 40px;
+            border: 1px solid rgba(197, 160, 89, 0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .admin-input {
+            width: 100%;
+            padding: 12px;
+            background: #121212;
+            border: 1px solid #333;
+            color: white;
+            margin-bottom: 20px;
+            font-family: var(--font-body);
+        }
+        .admin-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="login-card">
+            <h2 class="section-title" style="font-size: 2rem;">Admin Login</h2>
+            <form id="login-form">
+                <input type="password" id="password" class="admin-input" placeholder="Wachtwoord" required>
+                <button type="submit" class="btn-gold" style="width: 100%; border: none; cursor: pointer;">Inloggen</button>
+            </form>
+            <p id="error-msg" style="color: #ff4444; margin-top: 15px; display: none;">Ongeldig wachtwoord</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pw = document.getElementById('password').value;
+            if(pw === 'pelikaan') { // Simple check for demo
+                localStorage.setItem('isAdmin', 'true');
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

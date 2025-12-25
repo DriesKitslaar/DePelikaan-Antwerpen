@@ -1,0 +1,271 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Pelikaan | Beheer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-nav {
+            background: #1e1e1e;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+        }
+        .admin-content {
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .edit-section {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            background: #121212;
+            border: 1px solid #333;
+            color: white;
+            font-family: var(--font-body);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+        th { color: var(--accent-gold); }
+        .btn-small { padding: 5px 10px; font-size: 0.8rem; background: #333; color: white; border: none; cursor: pointer; }
+        .btn-small:hover { background: #555; }
+        .btn-delete { background: #500; }
+        .btn-delete:hover { background: #700; }
+        
+        /* Save Status */
+        #save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent-gold);
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body style="padding-top: 0;">
+
+    <nav class="admin-nav">
+        <div class="logo">De Pelikaan Admin</div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="saveAll()" class="btn-gold" style="padding: 10px 30px; font-size: 0.9rem; font-weight: bold;">OPSLAAN</button>
+            <button onclick="logout()" class="btn-gold" style="padding: 10px 20px; font-size: 0.8rem; background: #333; color: white;">Uitloggen</button>
+        </div>
+    </nav>
+
+    <div class="admin-content">
+        <h1>Dashboard</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 30px;">
+            Pas hieronder alles aan en klik op <strong>OPSLAAN</strong>. De website wordt direct bijgewerkt (op dit apparaat).
+        </p>
+
+        <div class="edit-section">
+            <h2 style="color: var(--accent-gold); margin-bottom: 20px;">Promo Banner</h2>
+            <div class="form-group">
+                <label>Toon Banner</label>
+                <select id="banner-show" class="form-control">
+                    <option value="true">Ja</option>
+                    <option value="false">Nee</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Datum</label>
+                <input type="text" id="banner-date" class="form-control" placeholder="bv. 2 Nov">
+            </div>
+            <div class="form-group">
+                <label>Titel</label>
+                <input type="text" id="banner-title" class="form-control" placeholder="bv. Minigolf Tornooi">
+            </div>
+            <div class="form-group">
+                <label>Tekst</label>
+                <input type="text" id="banner-text" class="form-control" placeholder="bv. Schrijf je nu in!">
+            </div>
+        </div>
+
+        <div class="edit-section">
+            <h2 style="color: var(--accent-gold); margin-bottom: 20px;">Menukaart Beheer</h2>
+            <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #333;">
+                <table id="menu-table">
+                    <thead>
+                        <tr>
+                            <th>Naam</th>
+                            <th>Prijs</th>
+                            <th>Categorie</th>
+                            <th>Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menu-table-body">
+                        <!-- Items will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="color: white; margin-bottom: 10px;">Nieuw Item Toevoegen</h3>
+            <div class="form-group">
+                <input type="text" id="new-item-name" class="form-control" placeholder="Naam">
+            </div>
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <input type="text" id="new-item-price" class="form-control" placeholder="Prijs (bv. € 2.50)">
+                <select id="new-item-category" class="form-control">
+                    <option value="tap">Van 't Vat</option>
+                    <option value="bottle">Op Fles</option>
+                    <option value="spirits">Sterke Drank</option>
+                    <option value="shots">Shotjes</option>
+                    <option value="soft">Fris</option>
+                    <option value="wine">Wijnen</option>
+                    <option value="apero">Aperitief</option>
+                    <option value="cocktail">Cocktails</option>
+                    <option value="mocktail">Mocktails</option>
+                    <option value="hot">Warm</option>
+                    <option value="snacks">Snacks</option>
+                    <option value="merch">T-Shirts</option>
+                </select>
+            </div>
+            <button onclick="addMenuItem()" class="btn-gold" style="border:none; cursor:pointer; width: 100%;">Toevoegen</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #555; font-size: 0.8em;">
+            <p>Geavanceerd: Omdat dit geen server heeft, wordt alles opgeslagen in de browser (LocalStorage).</p>
+        </div>
+    </div>
+
+    <div id="save-status">Wijzigingen Opgeslagen!</div>
+
+    <script src="data.js"></script>
+    <script>
+        // State
+        let currentMenuItems = [];
+        let currentEventData = {};
+
+        // Init
+        window.onload = function() {
+            // 1. Try Load from LocalStorage
+            const lsEvent = localStorage.getItem('siteEvent');
+            const lsMenu = localStorage.getItem('siteMenu');
+
+            if (lsEvent) {
+                currentEventData = JSON.parse(lsEvent);
+                console.log('Loaded Event from LS');
+            } else {
+                currentEventData = defaultEvent; // from data.js
+            }
+
+            if (lsMenu) {
+                currentMenuItems = JSON.parse(lsMenu);
+                console.log('Loaded Menu from LS');
+            } else {
+                currentMenuItems = defaultMenuItems; // from data.js
+            }
+
+            // 2. Fill Forms
+            fillForms();
+            renderMenuTable();
+        };
+
+        function fillForms() {
+            document.getElementById('banner-show').value = currentEventData.show.toString();
+            document.getElementById('banner-date').value = currentEventData.date;
+            document.getElementById('banner-title').value = currentEventData.title;
+            document.getElementById('banner-text').value = currentEventData.text;
+        }
+
+        // Check Auth
+        if(localStorage.getItem('isAdmin') !== 'true') {
+            window.location.href = 'admin.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('isAdmin');
+            window.location.href = 'admin.html';
+        }
+
+        function renderMenuTable() {
+            const tbody = document.getElementById('menu-table-body');
+            tbody.innerHTML = '';
+            
+            // Show newest last
+            currentMenuItems.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.price}</td>
+                    <td>${item.category}</td>
+                    <td><button onclick="deleteItem(${index})" class="btn-small btn-delete">&times;</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteItem(index) {
+            if(confirm('Zeker weten?')) {
+                currentMenuItems.splice(index, 1);
+                renderMenuTable();
+            }
+        }
+
+        function addMenuItem() {
+            const name = document.getElementById('new-item-name').value;
+            const price = document.getElementById('new-item-price').value;
+            const cat = document.getElementById('new-item-category').value;
+            
+            if(!name || !price) {
+                alert('Vul naam en prijs in');
+                return;
+            }
+
+            currentMenuItems.push({
+                name: name,
+                price: price,
+                category: cat,
+                desc: ""
+            });
+
+            document.getElementById('new-item-name').value = '';
+            document.getElementById('new-item-price').value = '';
+            
+            renderMenuTable();
+        }
+
+        function saveAll() {
+            // Update Event Object from Form
+            currentEventData.show = document.getElementById('banner-show').value === 'true';
+            currentEventData.date = document.getElementById('banner-date').value;
+            currentEventData.title = document.getElementById('banner-title').value;
+            currentEventData.text = document.getElementById('banner-text').value;
+
+            // Save to LocalStorage
+            localStorage.setItem('siteEvent', JSON.stringify(currentEventData));
+            localStorage.setItem('siteMenu', JSON.stringify(currentMenuItems));
+
+            // Feedback
+            const status = document.getElementById('save-status');
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

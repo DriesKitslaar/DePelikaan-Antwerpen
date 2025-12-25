@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Pelikaan Antwerpen | Authentiek Café</title>
+    <meta name="description" content="Café De Pelikaan Antwerpen. Een authentiek café met een ruime selectie aan bieren, sterke dranken en een gezellige sfeer. Alle dagen open.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Promo Banner (Wordt gevuld via script.js) -->
+    <div id="promo-banner" class="promo-banner hidden"></div>
+
+    <header class="main-header">
+        <div class="logo">De Pelikaan</div>
+        <nav>
+            <a href="#about">Over ons</a>
+            <a href="#menu">Menu</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Café De Pelikaan <span class="hero-subtitle">- Antwerpen -</span></h1>
+            <p class="hero-text">Alle dagen open. Een plek voor goede gesprekken en betere bieren.</p>
+            <a href="#menu" class="btn-gold">Bekijk de kaart</a>
+        </div>
+    </section>
+
+    <section id="about" class="info-section">
+        <div class="container">
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Openingsuren</h3>
+                    <ul>
+                        <li><span>Ma - Vr:</span> 09:00 - ...</li>
+                        <li><span>Za - Zo:</span> 10:00 - ...</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>Huisregels</h3>
+                    <p>FREE WI-FI INSIDE</p>
+                    <p>1 TAFEL = 1 REKENING</p>
+                    <p>TAKE 1 CHAIR = TAKE 1 DRINK</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu" class="menu-section">
+        <div class="container">
+            <h2 class="section-title">Onze Kaart</h2>
+            
+            <div class="menu-filters">
+                <button class="filter-btn active" data-category="all">Alles</button>
+                <button class="filter-btn" data-category="tap">Van 't Vat</button>
+                <button class="filter-btn" data-category="bottle">Op Fles</button>
+                <button class="filter-btn" data-category="wine">Wijnen</button>
+                <button class="filter-btn" data-category="cocktail">Cocktails</button>
+                <button class="filter-btn" data-category="spirits">Sterke Drank</button>
+                <button class="filter-btn" data-category="soft">Fris</button>
+                <button class="filter-btn" data-category="hot">Warm</button>
+                <button class="filter-btn" data-category="snacks">Snacks</button>
+            </div>
+
+            <div class="menu-grid" id="menu-grid">
+                <!-- Menu items will be injected here via JS -->
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <p>&copy; 2024 Café De Pelikaan Antwerpen.</p>
+            <p>Melkmarkt 14, 2000 Antwerpen</p>
+        </div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
