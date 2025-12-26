@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data: eventData, error: eventError } = await supabase
                 .from('events')
                 .select('*')
-                .single(); // We assume only 1 row or take the first
+                .single(); 
             
             if (eventData && !eventError) {
                 currentEvent = eventData;
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } 
     
-    // B. Fallback naar LocalStorage (als Supabase leeg/stuk is of nog niet geconfigureerd)
+    // B. Fallback naar LocalStorage
     if (!supabase || currentEvent === defaultEvent) { 
         const lsEvent = localStorage.getItem('siteEvent');
         if (lsEvent) currentEvent = JSON.parse(lsEvent);
@@ -72,50 +72,86 @@ document.addEventListener('DOMContentLoaded', async () => {
     const menuGrid = document.getElementById('menu-grid');
     const filterBtns = document.querySelectorAll('.filter-btn');
 
+    const categoryTitles = {
+        tap: "Van 't Vat",
+        bottle: "Op Fles",
+        wine: "Wijnen",
+        cocktail: "Cocktails",
+        mocktail: "Mocktails",
+        spirits: "Sterke Drank",
+        shots: "Shotjes",
+        apero: "Aperitief",
+        soft: "Fris",
+        hot: "Warm",
+        snacks: "Snacks",
+        merch: "Merchandise"
+    };
+
+    const categoryOrder = ['tap', 'bottle', 'wine', 'cocktail', 'mocktail', 'spirits', 'shots', 'apero', 'soft', 'hot', 'snacks', 'merch'];
+
+    function createMenuItemCard(item, delayIndex) {
+        const card = document.createElement('div');
+        card.className = 'menu-item';
+        card.style.animation = `fadeInUp 0.5s ease forwards ${Math.min(delayIndex * 0.05, 1)}s`;
+        card.style.opacity = '0'; 
+
+        card.innerHTML = `
+            <div class="item-header">
+                <span class="item-name">${item.name}</span>
+                <span class="item-price">${item.price}</span>
+            </div>
+            ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
+        `;
+        menuGrid.appendChild(card);
+    }
+
     function renderMenu(category) {
         if (!menuGrid) return;
         menuGrid.innerHTML = '';
-        
-        const filtered = category === 'all' 
-            ? menuItems 
-            : menuItems.filter(item => item.category === category);
 
-        if (filtered.length === 0) {
-            menuGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">Geen items gevonden in deze categorie.</div>';
-            return;
-        }
+        if (category === 'all') {
+            let hasItems = false;
+            let displayIndex = 0;
 
-        filtered.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'menu-item';
-            card.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.05}s`;
-            card.style.opacity = '0'; 
+            categoryOrder.forEach(catKey => {
+                const catItems = menuItems.filter(item => item.category === catKey);
+                if (catItems.length > 0) {
+                    hasItems = true;
+                    const header = document.createElement('h3');
+                    header.className = 'menu-category-header';
+                    header.textContent = categoryTitles[catKey] || catKey;
+                    menuGrid.appendChild(header);
 
-            card.innerHTML = `
-                <div class="item-header">
-                    <span class="item-name">${item.name}</span>
-                    <span class="item-price">${item.price}</span>
-                </div>
-                ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
-            `;
-            menuGrid.appendChild(card);
-        });
-
-        // Add keyframe animation dynamically if not in CSS
-        if (!document.getElementById('dynamic-styles')) {
-            const style = document.createElement('style');
-            style.id = 'dynamic-styles';
-            style.innerHTML = `
-                @keyframes fadeInUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
+                    catItems.forEach(item => {
+                        createMenuItemCard(item, displayIndex++);
+                    });
                 }
-            `;
-            document.head.appendChild(style);
+            });
+
+            const known = new Set(categoryOrder);
+            const others = menuItems.filter(item => !known.has(item.category));
+            if (others.length > 0) {
+                const header = document.createElement('h3');
+                header.className = 'menu-category-header';
+                header.textContent = 'Overige';
+                menuGrid.appendChild(header);
+                others.forEach(item => createMenuItemCard(item, displayIndex++));
+            }
+
+            if (!hasItems && others.length === 0) {
+                menuGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">Geen items gevonden.</div>';
+            }
+
+        } else {
+            const filtered = menuItems.filter(item => item.category === category);
+            if (filtered.length === 0) {
+                menuGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">Geen items gevonden in deze categorie.</div>';
+            } else {
+                filtered.forEach((item, index) => createMenuItemCard(item, index));
+            }
         }
     }
 
-    // Filters
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             filterBtns.forEach(b => b.classList.remove('active'));
@@ -124,10 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Initial Render
     renderMenu('all');
 
-    // Smooth Scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
@@ -137,7 +171,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Parallax
     window.addEventListener('scroll', () => {
         const scrolled = window.scrollY;
         const hero = document.querySelector('.hero');
